@@ -17,7 +17,7 @@ export default function HomePage() {
 
   function handleClick(time: number) {
     audio.current!.currentTime = time;
-    audio.current?.play();
+    audio.current!.play();
   }
 
   function handleTimeChange(time: number) {
