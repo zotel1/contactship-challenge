@@ -1,5 +1,5 @@
 "use client";
-import {useRef} from "react";
+import {useRef, useState} from "react";
 
 import TRANSCRIPT from "../app/data/transcript.json";
 import AUDIO from "../app/data/audio.wav";
@@ -12,27 +12,46 @@ export interface Message {
 }
 
 export default function HomePage() {
+  const [progress, setProgress] = useState<number>(0);
   const audio = useRef<HTMLAudioElement>(null);
 
   function handleClick(time: number) {
     audio.current!.currentTime = time;
+    audio.current?.play();
+  }
+
+  function handleTimeChange(time: number) {
+    const match = TRANSCRIPT.findLast((message) => message.start < progress);
+
+    setProgress(time);
+    document.getElementById(String(match?.start))?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
   }
 
   return (
     <section className="grid gap-4">
       <ul className="grid gap-4">
-        {TRANSCRIPT.map((message) => (
+        {TRANSCRIPT.map(({start, content, role}) => (
           <button
-            key={message.start}
-            className={`rounded bg-neutral-900 p-4 ${message.role === "user" ? "justify-self-end bg-neutral-700" : "bg-neutral-800"}`}
+            key={start}
+            className={`rounded bg-neutral-900 p-4 ${role === "user" ? "justify-self-end bg-neutral-700" : "bg-neutral-800"} ${progress < start ? "opacity-50" : "opacity-100"}`}
+            id={String(start)}
             type="button"
-            onClick={() => handleClick(message.start)}
+            onClick={() => handleClick(start)}
           >
-            {message.content}
+            {content}
           </button>
         ))}
       </ul>
-      <audio ref={audio} controls className="w-full" src={AUDIO} />
+      <audio
+        ref={audio}
+        controls
+        className="sticky bottom-4 w-full"
+        src={AUDIO}
+        onTimeUpdate={(event) => handleTimeChange(event.currentTarget.currentTime)}
+      />
     </section>
   );
 }
